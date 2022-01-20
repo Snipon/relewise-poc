@@ -6,9 +6,11 @@ import Recommended from './Components/Recommended';
 
 function App() {
   // Set mock user id.
-  const currentUser = localStorage.getItem('user');
+  let currentUser = localStorage.getItem('user');
   if (!currentUser) {
-    localStorage.setItem('user', uuid());
+    const id = uuid();
+    localStorage.setItem('user', id);
+    currentUser = id;
   }
 
   return (
