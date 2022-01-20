@@ -1,19 +1,45 @@
-import { Container, Grid, GridItem } from '@chakra-ui/react';
+import { Box, Container, Grid, GridItem } from '@chakra-ui/react';
 import HeaderComponent from './Components/Header.Component';
 import SearchBoxComponent from './Components/SearchBox.component';
+import { v4 as uuid } from 'uuid';
+import Recommended from './Components/Recommended';
 
 function App() {
+  // Set mock user id.
+  const currentUser = localStorage.getItem('user');
+  if (!currentUser) {
+    localStorage.setItem('user', uuid());
+  }
+
   return (
-    <Container maxW="container.lg">
-      <Grid templateColumns="repeat(5, 1fr)" gap={5}>
-        <GridItem colSpan={5}>
-          <HeaderComponent />
-        </GridItem>
-        <GridItem colSpan={5}>
-          <SearchBoxComponent />
-        </GridItem>
-      </Grid>
-    </Container>
+    <Box style={{ minHeight: '100vh', backgroundColor: '#fafafa' }}>
+      <Container maxW="container.lg" padding={5}>
+        <Grid templateColumns="repeat(5, 1fr)" gap={5}>
+          <GridItem colSpan={5}>
+            <HeaderComponent />
+          </GridItem>
+        </Grid>
+      </Container>
+      <Box bg="white" color="black">
+        <Container maxW="container.lg" padding="5">
+          <Grid templateColumns="repeat(5, 1fr)" gap={5}>
+            <GridItem colSpan={5}>
+              <SearchBoxComponent />
+            </GridItem>
+            <GridItem colSpan={5}>
+              <Recommended />
+            </GridItem>
+          </Grid>
+        </Container>
+      </Box>
+      <Container maxW="container.lg" padding={5}>
+        <Grid templateColumns="repeat(5, 1fr)" gap={5}>
+          <GridItem colSpan={5}>
+            <p>User: {currentUser}</p>
+          </GridItem>
+        </Grid>
+      </Container>
+    </Box>
   );
 }
 

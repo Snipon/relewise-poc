@@ -1,6 +1,7 @@
 import { Box, Button, Grid, GridItem, Heading, Input } from '@chakra-ui/react';
 import axios from 'axios';
 import { ChangeEventHandler, useState } from 'react';
+import ViewButton from './ViewButton';
 
 function SearchBoxComponent() {
   const [value, setValue] = useState('');
@@ -11,42 +12,49 @@ function SearchBoxComponent() {
     setValue(e.target.value);
   };
 
+  const user = localStorage.getItem('user');
+
   const handleSearch = async () => {
     setLoading(true);
-    setQuery(value);
+    const apiEndpoint = process.env.REACT_APP_RELEWISE_API_ENDPOINT || '';
     const apiKey = process.env.REACT_APP_RELEWISE_API_KEY || '';
-    const searchUrl = process.env.REACT_APP_RELEWISE_API_ENDPOINT || '';
+    setQuery(value);
 
     const searchBody = {
-      Term: query,
-      Settings: {
-        SelectedProductProperties: {
-          DisplayName: true,
-          DataKeys: ['Author Names']
+      term: value,
+      settings: {
+        selectedProductProperties: {
+          displayName: true,
+          dataKeys: ['Author Names']
         }
       },
-      Take: 10,
-      Language: {
+      take: 10,
+      language: {
         Value: 'da'
       },
-      Currency: {
+      currency: {
         Value: 'DKK'
       },
-      User: {},
-      DisplayedAtLocation: 'Search overlay'
+      user: {
+        temporaryId: user
+      },
+      displayedAtLocation: 'Search overlay'
     };
 
     try {
-      const { data } = await axios.post(`${searchUrl}/ProductSearchRequest`, searchBody, {
+      const { data } = await axios.post(`${apiEndpoint}/ProductSearchRequest`, searchBody, {
         headers: {
           Authorization: `APIKey ${apiKey}`
         }
       });
 
       if (data) {
-        const formatted = data.results.map(({ displayName }: { displayName: string }) => ({
-          displayName
-        }));
+        const formatted = data.results.map(
+          ({ displayName, productId }: { displayName: string; productId: string }) => ({
+            displayName,
+            productId
+          })
+        );
         setResult(formatted);
         setLoading(false);
       }
@@ -84,8 +92,11 @@ function SearchBoxComponent() {
               Results for <em>{query}</em>
             </Heading>
             <ul>
-              {result.map(({ displayName }, i) => (
-                <li key={i}>{displayName}</li>
+              {result.map(({ displayName, productId }) => (
+                <li key={productId}>
+                  {displayName}
+                  <ViewButton id={productId} />
+                </li>
               ))}
             </ul>
           </GridItem>
