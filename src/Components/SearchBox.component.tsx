@@ -1,68 +1,55 @@
 import { Box, Button, Grid, GridItem, Heading, Input } from '@chakra-ui/react';
-import axios from 'axios';
-import { ChangeEventHandler, useState } from 'react';
+import { ChangeEventHandler, useEffect, useState } from 'react';
+import relewise, { SearchDataType, SearchResultType } from '../services/relewise.service';
 import ViewButton from './ViewButton';
 
 function SearchBoxComponent() {
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState('');
-  const [result, setResult] = useState([]);
+  const user = localStorage.getItem('user');
+  const [result, setResult] = useState<SearchResultType>({ query: '', data: [] });
+
   const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     setValue(e.target.value);
   };
 
-  const user = localStorage.getItem('user');
+  const searchBody = {
+    term: value,
+    settings: {
+      selectedProductProperties: {
+        displayName: true,
+        dataKeys: ['Author Names']
+      }
+    },
+    take: 20,
+    language: {
+      Value: 'da'
+    },
+    currency: {
+      Value: 'DKK'
+    },
+    user: {
+      temporaryId: user
+    },
+    displayedAtLocation: 'Search overlay'
+  };
 
   const handleSearch = async () => {
     setLoading(true);
-    const apiEndpoint = process.env.REACT_APP_RELEWISE_API_ENDPOINT || '';
-    const apiKey = process.env.REACT_APP_RELEWISE_API_KEY || '';
-    setQuery(value);
+    const searchResult = await relewise({
+      searchPath: 'ProductSearchRequest',
+      searchBody,
+      query: value
+    });
 
-    const searchBody = {
-      term: value,
-      settings: {
-        selectedProductProperties: {
-          displayName: true,
-          dataKeys: ['Author Names']
-        }
-      },
-      take: 10,
-      language: {
-        Value: 'da'
-      },
-      currency: {
-        Value: 'DKK'
-      },
-      user: {
-        temporaryId: user
-      },
-      displayedAtLocation: 'Search overlay'
-    };
-
-    try {
-      const { data } = await axios.post(`${apiEndpoint}/ProductSearchRequest`, searchBody, {
-        headers: {
-          Authorization: `APIKey ${apiKey}`
-        }
-      });
-
-      if (data) {
-        const formatted = data.results.map(
-          ({ displayName, productId }: { displayName: string; productId: string }) => ({
-            displayName,
-            productId
-          })
-        );
-        setResult(formatted);
-        setLoading(false);
-      }
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-    }
+    const {
+      data: { query, results }
+    } = searchResult;
+    setResult({ query, data: results || [] });
+    setLoading(false);
   };
+
+  const { data, query } = result;
 
   return (
     <Box>
@@ -86,13 +73,13 @@ function SearchBoxComponent() {
             Search
           </Button>
         </GridItem>
-        {result.length > 0 && (
+        {data.length > 0 && (
           <GridItem colSpan={5} margin={5}>
             <Heading as="h2" size="sm">
               Results for <em>{query}</em>
             </Heading>
             <ul>
-              {result.map(({ displayName, productId }) => (
+              {data.map(({ displayName, productId }: SearchDataType) => (
                 <li key={productId}>
                   {displayName}
                   <ViewButton id={productId} />

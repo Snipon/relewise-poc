@@ -1,15 +1,13 @@
 import { Box, Heading } from '@chakra-ui/react';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
+import relewise, { SearchResultType } from '../services/relewise.service';
 
 function Recommended() {
   const user = localStorage.getItem('user');
-  const apiEndpoint = process.env.REACT_APP_RELEWISE_API_ENDPOINT || '';
-  const apiKey = process.env.REACT_APP_RELEWISE_API_KEY || '';
 
-  const [result, setResult] = useState([]);
+  const [result, setResult] = useState<SearchResultType>({ data: [] });
 
-  const requestBody = {
+  const searchBody = {
     Language: {
       Value: 'da'
     },
@@ -25,26 +23,22 @@ function Recommended() {
   };
 
   const getData = async () => {
-    try {
-      const res = await axios.post(
-        `${apiEndpoint}/PersonalProductRecommendationRequest`,
-        requestBody,
-        {
-          headers: {
-            Authorization: `APIKey ${apiKey}`
-          }
-        }
-      );
+    const searchResult = await relewise({
+      searchPath: 'PersonalProductRecommendationRequest',
+      searchBody
+    });
 
-      setResult(res.data.recommendations);
-    } catch (error) {
-      console.log(error);
-    }
+    const {
+      data: { recommendations }
+    } = searchResult;
+    setResult({ data: recommendations });
   };
 
   useEffect(() => {
     getData();
   }, []);
+
+  const { data } = result;
 
   return (
     <Box>
@@ -52,7 +46,7 @@ function Recommended() {
         Recommended for you
       </Heading>
       <ul>
-        {result.map((item: { productId: string; displayName: string }) => (
+        {data.map((item: { productId: string; displayName: string }) => (
           <li key={item.productId}>{item.displayName}</li>
         ))}
       </ul>
