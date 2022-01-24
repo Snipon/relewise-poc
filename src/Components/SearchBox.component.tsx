@@ -1,5 +1,5 @@
 import { Box, Button, Grid, GridItem, Heading, Input } from '@chakra-ui/react';
-import { ChangeEventHandler, useEffect, useState } from 'react';
+import { ChangeEventHandler, useState } from 'react';
 import relewise, { SearchDataType, SearchResultType } from '../services/relewise.service';
 import ViewButton from './ViewButton';
 
@@ -7,18 +7,78 @@ function SearchBoxComponent() {
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
   const user = localStorage.getItem('user');
-  const [result, setResult] = useState<SearchResultType>({ query: '', data: [] });
+  const [searchResult, setSearchResult] = useState<SearchResultType>({
+    query: '',
+    results: [],
+    recommendations: [],
+    predictions: []
+  });
 
-  const handleChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-    setValue(e.target.value);
+  const autoCompleteBody = {
+    Requests: [
+      {
+        $type: 'Relewise.Client.Requests.Search.SearchTermPredictionRequest, Relewise.Client',
+        Term: value,
+        Take: 5
+      },
+      {
+        $type: 'Relewise.Client.Requests.Search.ProductSearchRequest, Relewise.Client',
+        Term: value,
+        Facets: {
+          Items: []
+        },
+        Settings: {
+          Recommendations: {},
+          selectedProductProperties: {
+            displayName: true,
+            dataKeys: ['Author Names', 'Publishers']
+          }
+        },
+        Sorting: {},
+        Take: 20,
+        Filters: {}
+      }
+    ],
+    Language: {
+      Value: 'da'
+    },
+    Currency: {
+      Value: 'DKK'
+    },
+    User: {
+      Classifications: {},
+      Identifiers: {},
+      Data: {}
+    },
+    DisplayedAtLocation: 'Search overlay',
+    RelevanceModifiers: {},
+    Filters: {}
   };
 
-  const searchBody = {
+  const handleChange: ChangeEventHandler<HTMLInputElement> = async (e) => {
+    setValue(e.target.value);
+    const { predictions, results } = await relewise({
+      searchPath: 'SearchRequestCollection',
+      requestBody: autoCompleteBody
+    });
+
+    setSearchResult({
+      predictions,
+      results,
+      recommendations: [],
+      query: value
+    });
+  };
+
+  const requestBody = {
     term: value,
     settings: {
       selectedProductProperties: {
         displayName: true,
-        dataKeys: ['Author Names']
+        dataKeys: ['Author Names', 'Publishers']
+      },
+      recommendations: {
+        take: 5
       }
     },
     take: 20,
@@ -36,20 +96,17 @@ function SearchBoxComponent() {
 
   const handleSearch = async () => {
     setLoading(true);
-    const searchResult = await relewise({
+    const { query, results, recommendations, predictions } = await relewise({
       searchPath: 'ProductSearchRequest',
-      searchBody,
+      requestBody,
       query: value
     });
 
-    const {
-      data: { query, results }
-    } = searchResult;
-    setResult({ query, data: results || [] });
+    setSearchResult({ query, results, recommendations, predictions });
     setLoading(false);
   };
 
-  const { data, query } = result;
+  const { results, predictions, query } = searchResult;
 
   return (
     <Box>
@@ -73,13 +130,25 @@ function SearchBoxComponent() {
             Search
           </Button>
         </GridItem>
-        {data.length > 0 && (
+        {predictions.length > 0 && (
+          <GridItem colSpan={5} margin={5}>
+            <Heading as="h2" size="sm">
+              predictions for <em>{query}</em>
+            </Heading>
+            <ul>
+              {predictions.map(({ term }: any, i) => (
+                <li key={i}>{term}</li>
+              ))}
+            </ul>
+          </GridItem>
+        )}
+        {results.length > 0 && (
           <GridItem colSpan={5} margin={5}>
             <Heading as="h2" size="sm">
               Results for <em>{query}</em>
             </Heading>
             <ul>
-              {data.map(({ displayName, productId }: SearchDataType) => (
+              {results.map(({ displayName, productId }: SearchDataType) => (
                 <li key={productId}>
                   {displayName}
                   <ViewButton id={productId} />

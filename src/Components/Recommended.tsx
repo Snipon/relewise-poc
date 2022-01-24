@@ -5,9 +5,13 @@ import relewise, { SearchResultType } from '../services/relewise.service';
 function Recommended() {
   const user = localStorage.getItem('user');
 
-  const [result, setResult] = useState<SearchResultType>({ data: [] });
+  const [result, setResult] = useState<SearchResultType>({
+    results: [],
+    recommendations: [],
+    predictions: []
+  });
 
-  const searchBody = {
+  const requestBody = {
     Language: {
       Value: 'da'
     },
@@ -25,20 +29,18 @@ function Recommended() {
   const getData = async () => {
     const searchResult = await relewise({
       searchPath: 'PersonalProductRecommendationRequest',
-      searchBody
+      requestBody
     });
 
-    const {
-      data: { recommendations }
-    } = searchResult;
-    setResult({ data: recommendations });
+    const { recommendations } = searchResult;
+    setResult({ recommendations, results: [], predictions: [] });
   };
 
   useEffect(() => {
     getData();
   }, []);
 
-  const { data } = result;
+  const { recommendations } = result;
 
   return (
     <Box>
@@ -46,7 +48,7 @@ function Recommended() {
         Recommended for you
       </Heading>
       <ul>
-        {data.map((item: { productId: string; displayName: string }) => (
+        {recommendations.map((item: { productId: string; displayName: string }) => (
           <li key={item.productId}>{item.displayName}</li>
         ))}
       </ul>

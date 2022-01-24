@@ -1,12 +1,10 @@
 import { Button } from '@chakra-ui/react';
 import { ViewIcon } from '@chakra-ui/icons';
-import axios from 'axios';
+import relewise from '../services/relewise.service';
 function ViewButton({ id }: { id: string }) {
-  const apiEndpoint = process.env.REACT_APP_RELEWISE_API_ENDPOINT || '';
-  const apiKey = process.env.REACT_APP_RELEWISE_API_KEY || '';
   const user = localStorage.getItem('user');
 
-  const searchBody = {
+  const requestBody = {
     productView: {
       user: {
         temporaryId: user,
@@ -21,13 +19,9 @@ function ViewButton({ id }: { id: string }) {
 
   const handleOnClick = async () => {
     try {
-      const res = await axios.post(`${apiEndpoint}/TrackProductViewRequest`, searchBody, {
-        headers: {
-          Authorization: `APIKey ${apiKey}`
-        }
-      });
+      const { statusCode } = await relewise({ searchPath: 'TrackProductViewRequest', requestBody });
 
-      console.log(res.status);
+      console.log(statusCode);
     } catch (error) {
       console.log(error);
     }

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export interface SearchConfigType {
   searchPath: string;
-  searchBody: any;
+  requestBody: any;
   query?: string;
 }
 
@@ -13,27 +13,55 @@ export interface SearchDataType {
 
 export interface SearchResultType {
   query?: string;
-  data: any;
-  status?: string;
+  predictions: any[];
+  recommendations: any[];
+  results: any[];
+  statusCode?: number;
 }
 
 async function relewise(conf: SearchConfigType): Promise<SearchResultType> {
-  const { searchPath, query, searchBody } = conf;
+  const { searchPath, query, requestBody } = conf;
   const apiEndpoint = process.env.REACT_APP_RELEWISE_API_ENDPOINT || '';
   const apiKey = process.env.REACT_APP_RELEWISE_API_KEY || '';
-  let result;
+
+  const searchResult = {
+    results: [],
+    recommendations: [],
+    predictions: [],
+    statusCode: 0
+  };
 
   try {
-    const { data } = await axios.post(`${apiEndpoint}/${searchPath}`, searchBody, {
-      headers: {
-        Authorization: `APIKey ${apiKey}`
+    const { data, status: statusCode } = await axios.post(
+      `${apiEndpoint}/${searchPath}`,
+      requestBody,
+      {
+        headers: {
+          Authorization: `APIKey ${apiKey}`
+        }
       }
-    });
-    result = data;
+    );
+
+    searchResult.results = data.results || [];
+    searchResult.recommendations = data.recommendations || [];
+    searchResult.statusCode = statusCode;
+
+    data.responses &&
+      data.responses.map((response: any) => {
+        const { predictions, results } = response;
+        if (predictions) searchResult.predictions = predictions || [];
+        if (results) searchResult.results = results || [];
+      });
   } catch (error) {
     console.log(error);
   }
-  return { data: result, query };
+  return {
+    results: searchResult.results || [],
+    recommendations: searchResult.recommendations || [],
+    predictions: searchResult.predictions || [],
+    query,
+    statusCode: searchResult.statusCode
+  };
 }
 
 export default relewise;
