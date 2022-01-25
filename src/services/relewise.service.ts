@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+/* eslint-disable */
 export interface SearchConfigType {
   searchPath: string;
   requestBody: any;
@@ -7,7 +8,6 @@ export interface SearchConfigType {
 }
 
 /* eslint-disable */
-
 export interface SearchDataType {
   displayName: string;
   productId: string;
