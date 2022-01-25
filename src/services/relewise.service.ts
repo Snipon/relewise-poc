@@ -11,9 +11,15 @@ export interface SearchDataType {
   productId: string;
 }
 
+export interface PredictionsType {
+  term: string;
+  type: string;
+}
+
+/* eslint-disable */
 export interface SearchResultType {
   query?: string;
-  predictions: any[];
+  predictions: PredictionsType[];
   recommendations: any[];
   results: any[];
   statusCode?: number;

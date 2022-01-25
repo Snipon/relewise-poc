@@ -1,25 +1,50 @@
 import { Box, Button, Grid, GridItem, Heading, Input } from '@chakra-ui/react';
 import { ChangeEventHandler, useState } from 'react';
 import relewise, { SearchDataType, SearchResultType } from '../services/relewise.service';
+import Highlighted from './Highlighted';
+import PopularTerms from './PopularTerms';
+import Predictions from './Predictions';
 import ViewButton from './ViewButton';
 
 function SearchBoxComponent() {
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
   const user = localStorage.getItem('user');
-  const [searchResult, setSearchResult] = useState<SearchResultType>({
+
+  const defaultValue = {
     query: '',
     results: [],
     recommendations: [],
     predictions: []
-  });
+  };
+
+  const [searchResult, setSearchResult] = useState<SearchResultType>(defaultValue);
+
+  const handleChange: ChangeEventHandler<HTMLInputElement> = async (e) => {
+    setValue(e.target.value);
+    const { predictions, results } = await relewise({
+      searchPath: 'SearchRequestCollection',
+      requestBody: autoCompleteBody
+    });
+
+    if (value.length > 0) {
+      setSearchResult({
+        predictions,
+        results,
+        recommendations: [],
+        query: value
+      });
+    } else {
+      setSearchResult(defaultValue);
+    }
+  };
 
   const autoCompleteBody = {
     Requests: [
       {
         $type: 'Relewise.Client.Requests.Search.SearchTermPredictionRequest, Relewise.Client',
         Term: value,
-        Take: 5
+        Take: 3
       },
       {
         $type: 'Relewise.Client.Requests.Search.ProductSearchRequest, Relewise.Client',
@@ -35,7 +60,7 @@ function SearchBoxComponent() {
           }
         },
         Sorting: {},
-        Take: 20,
+        Take: 5,
         Filters: {}
       }
     ],
@@ -53,21 +78,6 @@ function SearchBoxComponent() {
     DisplayedAtLocation: 'Search overlay',
     RelevanceModifiers: {},
     Filters: {}
-  };
-
-  const handleChange: ChangeEventHandler<HTMLInputElement> = async (e) => {
-    setValue(e.target.value);
-    const { predictions, results } = await relewise({
-      searchPath: 'SearchRequestCollection',
-      requestBody: autoCompleteBody
-    });
-
-    setSearchResult({
-      predictions,
-      results,
-      recommendations: [],
-      query: value
-    });
   };
 
   const requestBody = {
@@ -130,28 +140,23 @@ function SearchBoxComponent() {
             Search
           </Button>
         </GridItem>
+        <GridItem colSpan={5}>
+          <PopularTerms />
+        </GridItem>
         {predictions.length > 0 && (
-          <GridItem colSpan={5} margin={5}>
-            <Heading as="h2" size="sm">
-              predictions for <em>{query}</em>
-            </Heading>
-            <ul>
-              {predictions.map(({ term }: any, i) => (
-                <li key={i}>{term}</li>
-              ))}
-            </ul>
+          <GridItem colSpan={1} margin={5}>
+            <Predictions predictions={predictions} />
           </GridItem>
         )}
         {results.length > 0 && (
-          <GridItem colSpan={5} margin={5}>
+          <GridItem colSpan={predictions.length > 1 ? 4 : 5} margin={5}>
             <Heading as="h2" size="sm">
               Results for <em>{query}</em>
             </Heading>
             <ul>
               {results.map(({ displayName, productId }: SearchDataType) => (
                 <li key={productId}>
-                  {displayName}
-                  <ViewButton id={productId} />
+                  <Highlighted subject={displayName} term={query} /> <ViewButton id={productId} />
                 </li>
               ))}
             </ul>

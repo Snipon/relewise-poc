@@ -28,7 +28,7 @@ function App() {
             <GridItem colSpan={5}>
               <SearchBoxComponent />
             </GridItem>
-            <GridItem colSpan={5}>
+            <GridItem colSpan={5} margin={5}>
               <Recommended />
             </GridItem>
           </Grid>
