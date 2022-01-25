@@ -2,7 +2,13 @@ import { Box, Heading } from '@chakra-ui/react';
 import { PredictionsType } from '../services/relewise.service';
 import Highlighted from './Highlighted';
 
-function Predictions({ predictions }: { predictions: PredictionsType[] }) {
+function Predictions({
+  predictions,
+  callback
+}: {
+  predictions: PredictionsType[];
+  callback: (val: string) => void;
+}) {
   let query = '';
 
   predictions
@@ -12,15 +18,15 @@ function Predictions({ predictions }: { predictions: PredictionsType[] }) {
     });
 
   return (
-    <Box>
-      <Heading as="h2" size="md">
-        Recommended for you
+    <Box as="aside">
+      <Heading as="h2" size="sm">
+        Predictions
       </Heading>
       <ul>
         {predictions
           .filter(({ type }) => type === 'WordContinuation')
           .map((prediction, i: number) => (
-            <li key={i}>
+            <li key={i} onClick={() => callback(prediction.term)} style={{ cursor: 'pointer' }}>
               <Highlighted subject={prediction.term} term={query} />
             </li>
           ))}

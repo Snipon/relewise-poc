@@ -1,5 +1,5 @@
 import { Box, Button, Grid, GridItem, Heading, Input } from '@chakra-ui/react';
-import { ChangeEventHandler, useState } from 'react';
+import { ChangeEventHandler, useEffect, useState } from 'react';
 import relewise, { SearchDataType, SearchResultType } from '../services/relewise.service';
 import Highlighted from './Highlighted';
 import PopularTerms from './PopularTerms';
@@ -8,6 +8,7 @@ import ViewButton from './ViewButton';
 
 function SearchBoxComponent() {
   const [value, setValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const user = localStorage.getItem('user');
 
@@ -22,29 +23,15 @@ function SearchBoxComponent() {
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = async (e) => {
     setValue(e.target.value);
-    const { predictions, results } = await relewise({
-      searchPath: 'SearchRequestCollection',
-      requestBody: autoCompleteBody
-    });
-
-    if (value.length > 0) {
-      setSearchResult({
-        predictions,
-        results,
-        recommendations: [],
-        query: value
-      });
-    } else {
-      setSearchResult(defaultValue);
-    }
   };
 
-  const autoCompleteBody = {
+  // Combined request, woot!
+  const requestBody = {
     Requests: [
       {
         $type: 'Relewise.Client.Requests.Search.SearchTermPredictionRequest, Relewise.Client',
         Term: value,
-        Take: 3
+        Take: 5
       },
       {
         $type: 'Relewise.Client.Requests.Search.ProductSearchRequest, Relewise.Client',
@@ -60,7 +47,7 @@ function SearchBoxComponent() {
           }
         },
         Sorting: {},
-        Take: 5,
+        Take: 20,
         Filters: {}
       }
     ],
@@ -71,6 +58,7 @@ function SearchBoxComponent() {
       Value: 'DKK'
     },
     User: {
+      temporaryId: user,
       Classifications: {},
       Identifiers: {},
       Data: {}
@@ -80,34 +68,11 @@ function SearchBoxComponent() {
     Filters: {}
   };
 
-  const requestBody = {
-    term: value,
-    settings: {
-      selectedProductProperties: {
-        displayName: true,
-        dataKeys: ['Author Names', 'Publishers']
-      },
-      recommendations: {
-        take: 5
-      }
-    },
-    take: 20,
-    language: {
-      Value: 'da'
-    },
-    currency: {
-      Value: 'DKK'
-    },
-    user: {
-      temporaryId: user
-    },
-    displayedAtLocation: 'Search overlay'
-  };
-
   const handleSearch = async () => {
     setLoading(true);
+    setSearchQuery(value);
     const { query, results, recommendations, predictions } = await relewise({
-      searchPath: 'ProductSearchRequest',
+      searchPath: 'SearchRequestCollection',
       requestBody,
       query: value
     });
@@ -117,6 +82,15 @@ function SearchBoxComponent() {
   };
 
   const { results, predictions, query } = searchResult;
+
+  const handlePredictionClick = (val: string) => {
+    setValue(val);
+    setSearchQuery(val);
+  };
+
+  useEffect(() => {
+    handleSearch();
+  }, [searchQuery]);
 
   return (
     <Box>
@@ -143,9 +117,9 @@ function SearchBoxComponent() {
         <GridItem colSpan={5}>
           <PopularTerms />
         </GridItem>
-        {predictions.length > 0 && (
+        {predictions.length > 1 && (
           <GridItem colSpan={1} margin={5}>
-            <Predictions predictions={predictions} />
+            <Predictions predictions={predictions} callback={handlePredictionClick} />
           </GridItem>
         )}
         {results.length > 0 && (

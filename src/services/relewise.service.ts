@@ -6,6 +6,8 @@ export interface SearchConfigType {
   query?: string;
 }
 
+/* eslint-disable */
+
 export interface SearchDataType {
   displayName: string;
   productId: string;
