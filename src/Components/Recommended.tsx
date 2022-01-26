@@ -48,7 +48,7 @@ function Recommended() {
       <Heading as="h2" size="md">
         Recommended for you
       </Heading>
-      <ProductList data={recommendations} />
+      <ProductList data={recommendations} columns={5} />
     </Box>
   );
 }

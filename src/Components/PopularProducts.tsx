@@ -4,8 +4,6 @@ import relewise, { SearchResultType } from '../services/relewise.service';
 import ProductList from './ProductList';
 
 function PopularProducts() {
-  const user = localStorage.getItem('user');
-
   const [result, setResult] = useState<SearchResultType>({
     results: [],
     recommendations: [],
@@ -47,7 +45,7 @@ function PopularProducts() {
       <Heading as="h2" size="md">
         Popular products
       </Heading>
-      <ProductList data={recommendations} />
+      <ProductList data={recommendations} columns={5} />
     </Box>
   );
 }

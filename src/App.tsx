@@ -15,7 +15,7 @@ function App() {
   }
 
   return (
-    <Box style={{ minHeight: '100vh', backgroundColor: '#fafafa' }}>
+    <Box style={{ minHeight: '100vh' }} bg="tomato" color="white">
       <Container maxW="container.lg" padding={5}>
         <Grid templateColumns="repeat(12, 1fr)" gap={5}>
           <GridItem colSpan={12}>
@@ -29,10 +29,10 @@ function App() {
             <GridItem colSpan={12}>
               <SearchBoxComponent />
             </GridItem>
-            <GridItem colSpan={6} margin={5}>
+            <GridItem colSpan={12} margin={5}>
               <Recommended />
             </GridItem>
-            <GridItem colSpan={6} margin={5}>
+            <GridItem colSpan={12} margin={5}>
               <PopularProducts />
             </GridItem>
           </Grid>

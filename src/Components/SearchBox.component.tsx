@@ -1,16 +1,22 @@
-import { Box, Button, Grid, GridItem, Heading, Input } from '@chakra-ui/react';
-import { ChangeEventHandler, useEffect, useState } from 'react';
-import relewise, { SearchDataType, SearchResultType } from '../services/relewise.service';
-import Highlighted from './Highlighted';
+import {
+  Box,
+  Grid,
+  GridItem,
+  Heading,
+  Input,
+  InputGroup,
+  InputRightElement,
+  Spinner
+} from '@chakra-ui/react';
+import { useState } from 'react';
+import relewise, { SearchResultType } from '../services/relewise.service';
 import PopularTerms from './PopularTerms';
 import Predictions from './Predictions';
 import ProductList from './ProductList';
-import ViewButton from './ViewButton';
+import { Formik, FormikValues } from 'formik';
+import { SearchIcon } from '@chakra-ui/icons';
 
 function SearchBoxComponent() {
-  const [value, setValue] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
   const user = localStorage.getItem('user');
 
   const defaultValue = {
@@ -20,62 +26,59 @@ function SearchBoxComponent() {
     predictions: []
   };
 
+  const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<SearchResultType>(defaultValue);
 
-  const handleChange: ChangeEventHandler<HTMLInputElement> = async (e) => {
-    setValue(e.target.value);
-  };
-
-  // Combined request, woot!
-  const requestBody = {
-    Requests: [
-      {
-        $type: 'Relewise.Client.Requests.Search.SearchTermPredictionRequest, Relewise.Client',
-        Term: value,
-        Take: 5
-      },
-      {
-        $type: 'Relewise.Client.Requests.Search.ProductSearchRequest, Relewise.Client',
-        Term: value,
-        Facets: {
-          Items: []
-        },
-        Settings: {
-          Recommendations: {},
-          selectedProductProperties: {
-            displayName: true,
-            dataKeys: ['Author Names', 'Publishers']
-          }
-        },
-        Sorting: {},
-        Take: 20,
-        Filters: {}
-      }
-    ],
-    Language: {
-      Value: 'da'
-    },
-    Currency: {
-      Value: 'DKK'
-    },
-    User: {
-      temporaryId: user,
-      Classifications: {},
-      Identifiers: {},
-      Data: {}
-    },
-    DisplayedAtLocation: 'Search overlay',
-    RelevanceModifiers: {},
-    Filters: {}
-  };
-
-  const handleSearch = async () => {
+  const handleSearch = async ({ query }: FormikValues) => {
     setLoading(true);
-    setSearchQuery(value);
-    const { query, results, recommendations, predictions } = await relewise({
+
+    // Combined request, woot!
+    const requestBody = {
+      Requests: [
+        {
+          $type: 'Relewise.Client.Requests.Search.SearchTermPredictionRequest, Relewise.Client',
+          Term: query,
+          Take: 5
+        },
+        {
+          $type: 'Relewise.Client.Requests.Search.ProductSearchRequest, Relewise.Client',
+          Term: query,
+          Facets: {
+            Items: []
+          },
+          Settings: {
+            Recommendations: {},
+            selectedProductProperties: {
+              displayName: true,
+              dataKeys: ['Author Names', 'Publishers']
+            }
+          },
+          Sorting: {},
+          Take: 20,
+          Filters: {}
+        }
+      ],
+      Language: {
+        Value: 'da'
+      },
+      Currency: {
+        Value: 'DKK'
+      },
+      User: {
+        temporaryId: user,
+        Classifications: {},
+        Identifiers: {},
+        Data: {}
+      },
+      DisplayedAtLocation: 'Search overlay',
+      RelevanceModifiers: {},
+      Filters: {}
+    };
+
+    const { results, recommendations, predictions } = await relewise({
       searchPath: 'SearchRequestCollection',
       requestBody,
-      query: value
+      query
     });
 
     setSearchResult({ query, results, recommendations, predictions });
@@ -85,33 +88,34 @@ function SearchBoxComponent() {
   const { results, predictions, query } = searchResult;
 
   const handlePredictionClick = (val: string) => {
-    setValue(val);
-    setSearchQuery(val);
+    handleSearch({ query: val });
   };
-
-  useEffect(() => {
-    handleSearch();
-  }, [searchQuery]);
 
   return (
     <Box>
       <Grid templateColumns="repeat(12, 1fr)" gap={0}>
         <GridItem colSpan={12}>
-          <Input
-            value={value}
-            onChange={handleChange}
-            placeholder="Search for something"
-            size="lg"
-          />
-          <Button
-            disabled={value.length === 0 || loading}
-            isLoading={loading}
-            colorScheme="teal"
-            onClick={handleSearch}
-            size="lg"
-          >
-            Search
-          </Button>
+          <Formik initialValues={{ query: '' }} onSubmit={handleSearch}>
+            {({ values, handleChange, handleSubmit }) => (
+              <form onSubmit={handleSubmit}>
+                <InputGroup>
+                  <InputRightElement
+                    children={
+                      loading ? <Spinner size="sm" color="gray" /> : <SearchIcon color="gray" />
+                    }
+                  />
+                  <Input
+                    disabled={loading}
+                    value={values.query}
+                    name="query"
+                    onChange={handleChange}
+                    placeholder="Search for something"
+                    size="lg"
+                  />
+                </InputGroup>
+              </form>
+            )}
+          </Formik>
         </GridItem>
         <GridItem colSpan={12}>
           <PopularTerms />
@@ -123,10 +127,10 @@ function SearchBoxComponent() {
         )}
         {results.length > 0 && (
           <GridItem colSpan={predictions.length > 1 ? 10 : 12} margin={5}>
-            <Heading as="h2" size="sm">
+            <Heading as="h2" size="md">
               Results for <em>{query}</em>
             </Heading>
-            <ProductList data={results} highlight={query || ''} />
+            <ProductList data={results} columns={predictions.length > 1 ? 4 : 5} />
           </GridItem>
         )}
       </Grid>
