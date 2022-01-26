@@ -1,7 +1,8 @@
 import { Box, Heading, Image } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import relewise from '../services/relewise.service';
 import Highlighted from './Highlighted';
+import { ModalContext } from '../providers/ModalProvider';
 
 export interface ProductType {
   name: string;
@@ -26,9 +27,13 @@ function ProductTeaser({ name, id, highlight }: ProductType) {
     }
   };
 
+  /* eslint-disable */
+  const [value, setValue] = useContext(ModalContext);
+
   const handleOnClick = async () => {
     try {
       const { statusCode } = await relewise({ searchPath: 'TrackProductViewRequest', requestBody });
+      setValue({ visible: true, data: { title: name, content: id } });
 
       console.log(statusCode);
       setClicked(!clicked);
@@ -40,7 +45,7 @@ function ProductTeaser({ name, id, highlight }: ProductType) {
   return (
     <Box as="article" onClick={handleOnClick} cursor="pointer">
       <Image
-        src={`https://dummyimage.com/320x180&text=${clicked ? ';)' : ':)'}`}
+        src={`https://dummyimage.com/320x180&text=${clicked ? ':D' : ':)'}`}
         alt="Teaser image"
       />
       <Heading as="h1" size="sm" padding={2} wordBreak="break-word">

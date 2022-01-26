@@ -1,9 +1,24 @@
-import { Box, Container, Grid, GridItem } from '@chakra-ui/react';
+import {
+  Box,
+  Container,
+  Grid,
+  GridItem,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  useDisclosure
+} from '@chakra-ui/react';
 import HeaderComponent from './Components/Header.Component';
 import SearchBoxComponent from './Components/SearchBox.component';
 import { v4 as uuid } from 'uuid';
 import Recommended from './Components/Recommended';
 import PopularProducts from './Components/PopularProducts';
+import { useModal } from './providers/ModalProvider';
+import { useEffect } from 'react';
+import Related from './Components/Related';
 
 function App() {
   // Set mock user id.
@@ -13,6 +28,15 @@ function App() {
     localStorage.setItem('user', id);
     currentUser = id;
   }
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [modalData] = useModal();
+
+  useEffect(() => {
+    if (modalData.visible) {
+      onOpen();
+    }
+  }, [modalData]);
 
   return (
     <Box style={{ minHeight: '100vh' }} bg="tomato" color="white">
@@ -45,6 +69,17 @@ function App() {
           </GridItem>
         </Grid>
       </Container>
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>{modalData.data.title}</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Related id={modalData.data.content} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }
