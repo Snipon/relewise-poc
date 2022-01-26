@@ -4,6 +4,7 @@ import relewise, { SearchDataType, SearchResultType } from '../services/relewise
 import Highlighted from './Highlighted';
 import PopularTerms from './PopularTerms';
 import Predictions from './Predictions';
+import ProductList from './ProductList';
 import ViewButton from './ViewButton';
 
 function SearchBoxComponent() {
@@ -94,16 +95,14 @@ function SearchBoxComponent() {
 
   return (
     <Box>
-      <Grid templateColumns="repeat(5, 1fr)" gap={0}>
-        <GridItem colSpan={4}>
+      <Grid templateColumns="repeat(12, 1fr)" gap={0}>
+        <GridItem colSpan={12}>
           <Input
             value={value}
             onChange={handleChange}
             placeholder="Search for something"
             size="lg"
           />
-        </GridItem>
-        <GridItem colSpan={1}>
           <Button
             disabled={value.length === 0 || loading}
             isLoading={loading}
@@ -114,26 +113,20 @@ function SearchBoxComponent() {
             Search
           </Button>
         </GridItem>
-        <GridItem colSpan={5}>
+        <GridItem colSpan={12}>
           <PopularTerms />
         </GridItem>
         {predictions.length > 1 && (
-          <GridItem colSpan={1} margin={5}>
+          <GridItem colSpan={2} margin={5}>
             <Predictions predictions={predictions} callback={handlePredictionClick} />
           </GridItem>
         )}
         {results.length > 0 && (
-          <GridItem colSpan={predictions.length > 1 ? 4 : 5} margin={5}>
+          <GridItem colSpan={predictions.length > 1 ? 10 : 12} margin={5}>
             <Heading as="h2" size="sm">
               Results for <em>{query}</em>
             </Heading>
-            <ul>
-              {results.map(({ displayName, productId }: SearchDataType) => (
-                <li key={productId}>
-                  <Highlighted subject={displayName} term={query} /> <ViewButton id={productId} />
-                </li>
-              ))}
-            </ul>
+            <ProductList data={results} highlight={query || ''} />
           </GridItem>
         )}
       </Grid>

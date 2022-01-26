@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import relewise, { SearchResultType } from '../services/relewise.service';
 import ProductList from './ProductList';
 
-function Recommended() {
+function PopularProducts() {
   const user = localStorage.getItem('user');
 
   const [result, setResult] = useState<SearchResultType>({
@@ -13,23 +13,22 @@ function Recommended() {
   });
 
   const requestBody = {
-    Language: {
-      Value: 'da'
-    },
+    basedOn: 'MostViewed',
     settings: {
+      sinceMinutesAgo: 0,
       numberOfRecommendations: 5,
       selectedProductProperties: {
         displayName: true
       }
     },
-    user: {
-      temporaryId: user
+    Language: {
+      Value: 'da'
     }
   };
 
   const getData = async () => {
     const searchResult = await relewise({
-      searchPath: 'PersonalProductRecommendationRequest',
+      searchPath: 'PopularProductsRequest',
       requestBody
     });
 
@@ -46,11 +45,11 @@ function Recommended() {
   return (
     <Box>
       <Heading as="h2" size="md">
-        Recommended for you
+        Popular products
       </Heading>
       <ProductList data={recommendations} />
     </Box>
   );
 }
 
-export default Recommended;
+export default PopularProducts;
