@@ -18,8 +18,8 @@ function Predictions({
     });
 
   return (
-    <Box as="aside">
-      <Heading as="h2" size="sm">
+    <Box as="nav">
+      <Heading as="h1" size="sm">
         Predictions
       </Heading>
       <ul>

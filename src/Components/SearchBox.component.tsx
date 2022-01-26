@@ -121,13 +121,13 @@ function SearchBoxComponent() {
           <PopularTerms />
         </GridItem>
         {predictions.length > 1 && (
-          <GridItem colSpan={2} margin={5}>
+          <GridItem colSpan={2} margin={5} as="aside">
             <Predictions predictions={predictions} callback={handlePredictionClick} />
           </GridItem>
         )}
         {results.length > 0 && (
-          <GridItem colSpan={predictions.length > 1 ? 10 : 12} margin={5}>
-            <Heading as="h2" size="md">
+          <GridItem colSpan={predictions.length > 1 ? 10 : 12} margin={5} as="main">
+            <Heading as="h2" size="md" marginBottom={5}>
               Results for <em>{query}</em>
             </Heading>
             <ProductList data={results} columns={predictions.length > 1 ? 4 : 5} />

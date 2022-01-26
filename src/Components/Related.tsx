@@ -1,11 +1,11 @@
-import { Box, Heading } from '@chakra-ui/react';
+import { Box, Heading, Progress } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import relewise, { SearchResultType } from '../services/relewise.service';
 import ProductList from './ProductList';
 
-const user = localStorage.getItem('user');
-
 function Related({ id }: { id: string }) {
+  const user = localStorage.getItem('user');
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SearchResultType>({
     results: [],
     recommendations: [],
@@ -25,14 +25,14 @@ function Related({ id }: { id: string }) {
     },
     settings: {
       numberOfRecommendations: 5,
-      recommendVariant: true
+      recommendVariant: true,
+      allowReplacingOfRecentlyShownRecommendations: true
     },
     Language: {
       Value: 'da'
     },
     user: {
-      temporaryId: user,
-      data: {}
+      temporaryId: user
     },
     displayedAtLocationType: 'Product Details Page',
     currency: {
@@ -41,13 +41,20 @@ function Related({ id }: { id: string }) {
   };
 
   const getData = async () => {
-    const searchResult = await relewise({
-      searchPath: 'SimilarProductsRequest',
-      requestBody
-    });
+    setLoading(true);
+    try {
+      const searchResult = await relewise({
+        searchPath: 'SimilarProductsRequest',
+        requestBody
+      });
 
-    const { recommendations } = searchResult;
-    setResult({ recommendations, results: [], predictions: [] });
+      const { recommendations } = searchResult;
+      setResult({ recommendations, results: [], predictions: [] });
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -57,11 +64,12 @@ function Related({ id }: { id: string }) {
   const { recommendations } = result;
 
   return (
-    <Box>
-      <Heading as="h2" size="md">
+    <Box as="section">
+      <Heading as="h1" size="md" marginBottom={5}>
         Similar products
       </Heading>
       <ProductList data={recommendations} columns={5} />
+      {loading && <Progress colorScheme="teal" size="xs" isIndeterminate />}
     </Box>
   );
 }

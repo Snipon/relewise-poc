@@ -1,9 +1,10 @@
-import { Box, Heading } from '@chakra-ui/react';
+import { Box, Heading, Progress } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import relewise, { SearchResultType } from '../services/relewise.service';
 import ProductList from './ProductList';
 
 function PopularProducts() {
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SearchResultType>({
     results: [],
     recommendations: [],
@@ -25,13 +26,20 @@ function PopularProducts() {
   };
 
   const getData = async () => {
-    const searchResult = await relewise({
-      searchPath: 'PopularProductsRequest',
-      requestBody
-    });
+    try {
+      setLoading(true);
+      const searchResult = await relewise({
+        searchPath: 'PopularProductsRequest',
+        requestBody
+      });
 
-    const { recommendations } = searchResult;
-    setResult({ recommendations, results: [], predictions: [] });
+      const { recommendations } = searchResult;
+      setResult({ recommendations, results: [], predictions: [] });
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -41,11 +49,12 @@ function PopularProducts() {
   const { recommendations } = result;
 
   return (
-    <Box>
-      <Heading as="h2" size="md">
+    <Box as="section">
+      <Heading as="h1" size="md" marginBottom={5}>
         Popular products
       </Heading>
       <ProductList data={recommendations} columns={5} />
+      {loading && <Progress colorScheme="teal" size="xs" isIndeterminate />}
     </Box>
   );
 }
