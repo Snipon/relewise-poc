@@ -26,7 +26,10 @@ function Related({ id }: { id: string }) {
     settings: {
       numberOfRecommendations: 5,
       recommendVariant: true,
-      allowReplacingOfRecentlyShownRecommendations: true
+      allowReplacingOfRecentlyShownRecommendations: true,
+      selectedProductProperties: {
+        displayName: true
+      }
     },
     Language: {
       Value: 'da'

@@ -70,7 +70,7 @@ function App() {
         </Grid>
       </Container>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} size="5xl">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>{modalData.data.title}</ModalHeader>
